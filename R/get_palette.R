@@ -1,66 +1,68 @@
-# Rutils/get_palette.R
+# R/get_palette.R
 #-------------------------------------------------------------------------------
 
-# 颜色方案提取工具：从 RDS 文件中提取指定颜色方案
+# Color Palette Extraction Tool: Extract a specified color palette from an RDS file
 #-------------------------------------------------------------------------------
 #
-# 背景介绍:
-#   - 本函数用于从编译好的 RDS 文件中提取颜色方案，提供灵活的颜色数量控制。
-#   - RDS 文件由 compile_palettes() 生成，包含 sequential、diverging 和 qualitative 三类颜色方案。
-#   - 支持以下功能：
-#     - 根据名称和类型提取颜色方案。
-#     - 可指定返回的颜色数量（n）。
-#     - 当类型错误时，自动查找并提示正确的类型。
-#     - 返回 HEX 颜色值向量，直接用于可视化或其他操作。
+# Background:
+#   - This function extracts color palettes from a compiled RDS file, allowing 
+#     flexible control over the number of colors returned.
+#   - The RDS file is generated using compile_palettes() and contains 
+#     sequential, diverging, and qualitative color palettes.
+#   - Features:
+#     - Extract a color palette by name and type.
+#     - Specify the number of colors to return (n).
+#     - Automatically locate and suggest the correct type if a mismatch occurs.
+#     - Returns HEX color values as a vector, ready for visualization or other applications.
 #
-# 参数说明:
-#   - name: 颜色方案名称（字符串，例如 "vividset"）
-#   - type: 颜色类型，"sequential"、"diverging" 或 "qualitative"（默认 "sequential"）
-#   - n: 返回的颜色数量（正整数，默认 NULL 表示返回全部颜色）
-#   - palette_rds: RDS 文件路径（默认 "colors/color_palettes.rds"）
+# Parameters:
+#   - name: Name of the color palette (string, e.g., "vividset")
+#   - type: Type of palette, either "sequential", "diverging", or "qualitative" (default: "sequential")
+#   - n: Number of colors to return (positive integer, default NULL returns all colors)
+#   - palette_rds: Path to the RDS file (default: "colors/color_palettes.rds")
 #
-# 返回值:
-#   - 字符向量，包含指定颜色方案的 HEX 颜色值
+# Return Value:
+#   - A character vector containing HEX color values of the specified palette.
 #
-# 依赖包:
-#   - cli (命令行交互提示)
+# Dependencies:
+#   - cli (for command-line interaction messages)
 
 get_palette <- function(name, 
                         type = c("sequential", "diverging", "qualitative"),
                         n = NULL,
                         palette_rds = "colors/color_palettes.rds") {
   
-  # 加载必要的包
+  # Load required package
   if (!requireNamespace("cli", quietly = TRUE)) {
-    stop("请先安装 cli 包：install.packages('cli')", call. = FALSE)
+    stop("Please install the cli package: install.packages('cli')", call. = FALSE)
   }
   library(cli)
   
-  # 检查 RDS 文件是否存在
+  # Check if the RDS file exists
   if (!file.exists(palette_rds)) {
-    cli_alert_danger("颜色方案文件不存在：{.path {palette_rds}}")
-    stop("请检查路径")
+    cli_alert_danger("Color palette file not found: {.path {palette_rds}}")
+    stop("Please check the file path.")
   }
   
-  # 读取 RDS 文件
+  # Read the RDS file
   palettes <- readRDS(palette_rds)
   
-  # 检查 type 是否合法
+  # Validate the type
   valid_types <- names(palettes)
   type <- match.arg(type)
   if (!type %in% valid_types) {
-    cli_alert_danger("无效的类型 '{type}'，可选类型为：{.val {valid_types}}")
-    stop("类型错误")
+    cli_alert_danger("Invalid type '{type}', available types: {.val {valid_types}}")
+    stop("Type mismatch.")
   }
   
-  # 检查 name 的合法性
+  # Validate the name parameter
   if (!is.character(name) || length(name) != 1) {
-    stop("颜色方案名称 (name) 必须是长度为 1 的字符串！")
+    stop("Palette name (name) must be a single string!")
   }
   
-  # 检查指定 type 下是否存在 name
+  # Check if the specified palette exists under the given type
   if (!name %in% names(palettes[[type]])) {
-    # 遍历所有类型查找 name
+    # Search for the name in all types
     found_type <- NULL
     for (t in valid_types) {
       if (name %in% names(palettes[[t]])) {
@@ -70,78 +72,78 @@ get_palette <- function(name,
     }
     
     if (is.null(found_type)) {
-      cli_alert_danger("未找到颜色方案 '{name}' 在任何类型中")
-      stop("颜色方案不存在")
+      cli_alert_danger("Palette '{name}' not found in any type.")
+      stop("Palette does not exist.")
     } else {
-      cli_alert_warning("未在类型 '{type}' 中找到 '{name}'，但在类型 '{found_type}' 中找到")
-      cli_alert_info("建议更改 type 参数为 '{found_type}'")
-      stop("类型与名称不匹配")
+      cli_alert_warning("Palette '{name}' not found in type '{type}', but found in '{found_type}'")
+      cli_alert_info("Consider changing the type parameter to '{found_type}'.")
+      stop("Type and name mismatch.")
     }
   }
   
-  # 提取颜色
+  # Extract colors
   colors <- palettes[[type]][[name]]
   max_len <- length(colors)
   
-  cli_alert_success("提取 '{name}' 成功，颜色数：{.val {max_len}}")
+  cli_alert_success("Successfully extracted '{name}', number of colors: {.val {max_len}}")
   
-  # 如果未指定 n，返回全部颜色
+  # Return all colors if n is not specified
   if (is.null(n)) {
     return(colors)
   }
   
-  # 检查 n 是否为正整数
+  # Validate n as a positive integer
   if (!is.numeric(n) || n != round(n) || n <= 0) {
-    cli_alert_danger("参数 'n' 必须是正整数，当前值为：{.val {n}}")
-    stop("n 必须是正整数")
+    cli_alert_danger("Parameter 'n' must be a positive integer, current value: {.val {n}}")
+    stop("n must be a positive integer.")
   }
   
-  # 检查请求数量是否超过最大长度
+  # Check if n exceeds the maximum available colors
   if (n > max_len) {
-    stop(sprintf("请求的颜色数量 (%d) 超过方案 '%s' 的最大长度 (%d)！", 
+    stop(sprintf("Requested number of colors (%d) exceeds available colors in '%s' (%d)!", 
                  n, name, max_len))
   }
   
-  # 返回指定数量的颜色
+  # Return the requested number of colors
   return(colors[seq_len(n)])
 }
 
 #-------------------------------------------------------------------------------
-# 示例用法: 从 RDS 文件提取颜色方案
+# Example Usage: Extract color palettes from an RDS file
 #-------------------------------------------------------------------------------
 
-# 前提：假设已通过 compile_palettes() 生成了 colors/color_palettes.rds
-# 包含以下颜色方案：
-# - qualitative/vividset (9 个颜色)
-# - qualitative/softtrio (3 个颜色)
-# - qualitative/harmonysix (6 个颜色)
+# Prerequisite: Assume compile_palettes() has generated colors/color_palettes.rds
+# Available palettes:
+# - qualitative/vividset (9 colors)
+# - qualitative/softtrio (3 colors)
+# - qualitative/harmonysix (6 colors)
 
-# # 示例 1: 提取全部颜色 (vividset)
+# # Example 1: Extract all colors from 'vividset'
 # colors_vividset <- get_palette("vividset", type = "qualitative")
-# cat("提取 'vividset' 全部颜色 (", length(colors_vividset), "个):", 
+# cat("Extracted all colors from 'vividset' (", length(colors_vividset), "):", 
 #     paste(colors_vividset, collapse = ", "), "\n")
 # 
-# # 示例 2: 提取指定数量颜色 (softtrio，前 2 个)
+# # Example 2: Extract a subset (first 2 colors) from 'softtrio'
 # colors_softtrio <- get_palette("softtrio", type = "qualitative", n = 2)
-# cat("提取 'softtrio' 前 2 个颜色:", paste(colors_softtrio, collapse = ", "), "\n")
+# cat("Extracted first 2 colors from 'softtrio':", paste(colors_softtrio, collapse = ", "), "\n")
 # 
-# # 示例 3: 提取指定数量颜色 (harmonysix，6 个颜色)
+# # Example 3: Extract exactly 6 colors from 'harmonysix'
 # colors_harmonysix <- get_palette("harmonysix", type = "qualitative", n = 6)
-# cat("提取 'harmonysix' 6 个颜色:", paste(colors_harmonysix, collapse = ", "), "\n")
+# cat("Extracted 6 colors from 'harmonysix':", paste(colors_harmonysix, collapse = ", "), "\n")
 # 
-# # 示例 4: 测试类型错误 (vividset 在 qualitative，但指定 sequential)
-# # 这会报错并提示正确类型
+# # Example 4: Test incorrect type (vividset is in qualitative, but 'sequential' is given)
+# # This will throw an error and suggest the correct type.
 # get_palette("vividset", type = "sequential")
 # 
-# # 示例 5: 测试非正整数 n (softtrio，n = 0)
-# # 这会报错并提示 n 必须是正整数
+# # Example 5: Test invalid n value (softtrio, n = 0)
+# # This will throw an error indicating that n must be a positive integer.
 # get_palette("softtrio", type = "qualitative", n = 0)
 # 
-# # 示例 6: 测试非整数 n (softtrio，n = 1.5)
-# # 这会报错并提示 n 必须是正整数
+# # Example 6: Test non-integer n value (softtrio, n = 1.5)
+# # This will throw an error indicating that n must be a positive integer.
 # get_palette("softtrio", type = "qualitative", n = 1.5)
 # 
-# # 示例 7: 用于可视化 (vividset 前 5 个颜色)
+# # Example 7: Use extracted colors for visualization (first 5 colors of vividset)
 # colors_vividset_5 <- get_palette("vividset", type = "qualitative", n = 5)
 # barplot(rep(1, 5), col = colors_vividset_5, main = "vividset (5 colors)")
 

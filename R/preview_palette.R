@@ -1,32 +1,33 @@
-# Rutils/preview_palette.R
+# R/preview_palette.R
 #-------------------------------------------------------------------------------
 
-# 颜色方案预览工具：从 RDS 文件提取颜色并展示为图形
+# Color Palette Preview Tool: Extract colors from an RDS file and visualize them
 #-------------------------------------------------------------------------------
 #
-# 背景介绍:
-#   - 本函数用于预览颜色方案的视觉效果，帮助用户选择合适的配色。
-#   - 直接从 RDS 文件中读取颜色方案，支持多种图形展示。
-#   - 支持的图形类型：
-#     - bar：条形图，展示颜色顺序和对比。
-#     - pie：饼图，展示颜色分布。
-#     - point：点图，模拟数据点的颜色效果。
-#     - rect：矩形图，平铺展示颜色块。
-#     - circle：圆形图，圆点排列展示颜色。
+# Background:
+#   - This function previews the visual appearance of a color palette, 
+#     helping users select appropriate color schemes.
+#   - It reads color palettes directly from an RDS file and supports various visualization methods.
+#   - Supported plot types:
+#     - bar: Bar plot to show color order and contrast.
+#     - pie: Pie chart to display color distribution.
+#     - point: Point plot to simulate data point colors.
+#     - rect: Rectangle plot to display color blocks.
+#     - circle: Circular plot with arranged dots.
 #
-# 参数说明:
-#   - name: 颜色方案名称（字符串，例如 "vividset"）
-#   - type: 颜色类型，"sequential"、"diverging" 或 "qualitative"（默认 "sequential"）
-#   - n: 返回的颜色数量（正整数，默认 NULL 表示使用全部颜色）
-#   - plot_type: 图形类型，"bar"、"pie"、"point"、"rect" 或 "circle"（默认 "bar"）
-#   - title: 图形标题（默认使用 name）
-#   - palette_rds: RDS 文件路径（默认 "colors/color_palettes.rds"）
+# Parameters:
+#   - name: Name of the color palette (string, e.g., "vividset")
+#   - type: Type of palette, either "sequential", "diverging", or "qualitative" (default: "sequential")
+#   - n: Number of colors to return (positive integer, default NULL uses all colors)
+#   - plot_type: Type of plot, either "bar", "pie", "point", "rect", or "circle" (default: "bar")
+#   - title: Title of the plot (default: name)
+#   - palette_rds: Path to the RDS file (default: "colors/color_palettes.rds")
 #
-# 返回值:
-#   - 无（直接生成图形展示颜色方案）
+# Return Value:
+#   - None (directly generates a visualization of the selected color palette).
 #
-# 依赖包:
-#   - cli (命令行交互提示)
+# Dependencies:
+#   - cli (for command-line interaction messages)
 
 preview_palette <- function(name, 
                             type = c("sequential", "diverging", "qualitative"),
@@ -35,38 +36,38 @@ preview_palette <- function(name,
                             title = name,
                             palette_rds = "colors/color_palettes.rds") {
   
-  # 加载必要的包
+  # Load required package
   if (!requireNamespace("cli", quietly = TRUE)) {
-    stop("请先安装 cli 包：install.packages('cli')", call. = FALSE)
+    stop("Please install the cli package: install.packages('cli')", call. = FALSE)
   }
   library(cli)
   
-  # 检查 plot_type
+  # Validate plot_type
   plot_type <- match.arg(plot_type)
   
-  # 检查 RDS 文件是否存在
+  # Check if the RDS file exists
   if (!file.exists(palette_rds)) {
-    cli_alert_danger("颜色方案文件不存在：{.path {palette_rds}}")
-    stop("请检查路径")
+    cli_alert_danger("Color palette file not found: {.path {palette_rds}}")
+    stop("Please check the file path.")
   }
   
-  # 读取 RDS 文件
+  # Read the RDS file
   palettes <- readRDS(palette_rds)
   
-  # 检查 type 是否合法
+  # Validate type
   valid_types <- names(palettes)
   type <- match.arg(type)
   if (!type %in% valid_types) {
-    cli_alert_danger("无效的类型 '{type}'，可选类型为：{.val {valid_types}}")
-    stop("类型错误")
+    cli_alert_danger("Invalid type '{type}', available types: {.val {valid_types}}")
+    stop("Type mismatch.")
   }
   
-  # 检查 name 的合法性
+  # Validate name
   if (!is.character(name) || length(name) != 1) {
-    stop("颜色方案名称 (name) 必须是长度为 1 的字符串！")
+    stop("Palette name (name) must be a single string!")
   }
   
-  # 检查指定 type 下是否存在 name
+  # Check if the specified palette exists under the given type
   if (!name %in% names(palettes[[type]])) {
     found_type <- NULL
     for (t in valid_types) {
@@ -76,36 +77,36 @@ preview_palette <- function(name,
       }
     }
     if (is.null(found_type)) {
-      cli_alert_danger("未找到颜色方案 '{name}' 在任何类型中")
-      stop("颜色方案不存在")
+      cli_alert_danger("Palette '{name}' not found in any type.")
+      stop("Palette does not exist.")
     } else {
-      cli_alert_warning("未在类型 '{type}' 中找到 '{name}'，但在类型 '{found_type}' 中找到")
-      cli_alert_info("建议更改 type 参数为 '{found_type}'")
-      stop("类型与名称不匹配")
+      cli_alert_warning("Palette '{name}' not found in type '{type}', but found in '{found_type}'")
+      cli_alert_info("Consider changing the type parameter to '{found_type}'.")
+      stop("Type and name mismatch.")
     }
   }
   
-  # 提取颜色
+  # Extract colors
   colors <- palettes[[type]][[name]]
   max_len <- length(colors)
   
-  # 如果指定 n，调整颜色数量
+  # Adjust the number of colors if n is specified
   if (!is.null(n)) {
     if (!is.numeric(n) || n != round(n) || n <= 0) {
-      cli_alert_danger("参数 'n' 必须是正整数，当前值为：{.val {n}}")
-      stop("n 必须是正整数")
+      cli_alert_danger("Parameter 'n' must be a positive integer, current value: {.val {n}}")
+      stop("n must be a positive integer.")
     }
     if (n > max_len) {
-      cli_alert_danger("请求的颜色数量 ({n}) 超过方案 '{name}' 的最大长度 ({max_len})")
-      stop("颜色数量超出范围")
+      cli_alert_danger("Requested number of colors ({n}) exceeds the maximum available in '{name}' ({max_len})")
+      stop("Color count exceeds available range.")
     }
     colors <- colors[seq_len(n)]
   }
   
   num_colors <- length(colors)
-  cli_alert_success("提取 '{name}' 成功，颜色数：{.val {num_colors}}")
+  cli_alert_success("Successfully extracted '{name}', number of colors: {.val {num_colors}}")
   
-  # 根据 plot_type 绘制图形并显示 HEX 码
+  # Generate the plot based on plot_type
   switch(plot_type,
          "bar" = {
            barplot(rep(1, num_colors), 
@@ -115,16 +116,16 @@ preview_palette <- function(name,
                    axes = FALSE, 
                    main = title, 
                    names.arg = colors, 
-                   las = 2,  # 垂直显示 HEX 码
-                   cex.names = 0.8)  # 调整字体大小
+                   las = 2,  # Vertical HEX labels
+                   cex.names = 0.8)  # Adjust font size
          },
          "pie" = {
            pie(rep(1, num_colors), 
                col = colors, 
-               labels = colors,  # 显示 HEX 码
+               labels = colors,  # Show HEX codes
                border = "white", 
                main = title, 
-               cex = 0.8)  # 调整字体大小
+               cex = 0.8)  # Adjust font size
          },
          "point" = {
            plot(seq_len(num_colors), 
@@ -139,7 +140,7 @@ preview_palette <- function(name,
            text(seq_len(num_colors), 
                 rep(1.2, num_colors), 
                 labels = colors, 
-                pos = 3,  # HEX 码在上方
+                pos = 3,  # HEX labels above
                 cex = 0.8)
          },
          "rect" = {
@@ -176,42 +177,36 @@ preview_palette <- function(name,
                 col = "white", 
                 cex = 0.8)
          },
-         stop("不支持的图形类型，目前仅支持：'bar', 'pie', 'point', 'rect', 'circle'")
+         stop("Unsupported plot type. Supported types: 'bar', 'pie', 'point', 'rect', 'circle'")
   )
   
-  cli_alert_info("预览 '{name}' 完成，展示类型：{.val {plot_type}}，颜色数：{.val {num_colors}}")
+  cli_alert_info("Preview of '{name}' completed, plot type: {.val {plot_type}}, number of colors: {.val {num_colors}}")
 }
 
 #-------------------------------------------------------------------------------
-# 示例用法: 预览颜色方案
+# Example Usage: Preview color palettes
 #-------------------------------------------------------------------------------
 
-# 前提：假设已通过 compile_palettes() 生成了 colors/color_palettes.rds
-# 包含以下颜色方案：
-# - qualitative/vividset (9 个颜色)
-# - qualitative/softtrio (3 个颜色)
-# - qualitative/harmonysix (6 个颜色)
+# Prerequisite: Assume compile_palettes() has generated colors/color_palettes.rds
+# Available palettes:
+# - qualitative/vividset (9 colors)
+# - qualitative/softtrio (3 colors)
+# - qualitative/harmonysix (6 colors)
 
-# # 示例 1: 用条形图预览 vividset（全部颜色）
+# # Example 1: Preview vividset using a bar plot (all colors)
 # preview_palette("vividset", type = "qualitative", plot_type = "bar")
 # 
-# # 示例 2: 用饼图预览 softtrio（全部颜色）
+# # Example 2: Preview softtrio using a pie chart
 # preview_palette("softtrio", type = "qualitative", plot_type = "pie")
 # 
-# # 示例 3: 用点图预览 harmonysix（前 4 个颜色）
+# # Example 3: Preview harmonysix using a point plot (first 4 colors)
 # preview_palette("harmonysix", type = "qualitative", n = 4, plot_type = "point")
 # 
-# # 示例 4: 用矩形图预览 vividset（前 5 个颜色）
+# # Example 4: Preview vividset using a rectangle plot (first 5 colors)
 # preview_palette("vividset", type = "qualitative", n = 5, plot_type = "rect", 
 #                 title = "VividSet Preview (5 Colors)")
 # 
-# # 示例 5: 用圆形图预览 softtrio（全部颜色）
+# # Example 5: Preview softtrio using a circle plot
 # preview_palette("softtrio", type = "qualitative", plot_type = "circle")
-# 
-# # 示例 6: 测试不支持的图形类型
-# preview_palette("softtrio", type = "qualitative", plot_type = "line")
-# 
-# # 示例 7: 测试非正整数 n (softtrio，n = 0)
-# preview_palette("softtrio", type = "qualitative", n = 0, plot_type = "bar")
 
 #-------------------------------------------------------------------------------
