@@ -1,0 +1,6 @@
+*.Rhistory
+*.RData
+*.log
+*.rds
+*.json
+output/
