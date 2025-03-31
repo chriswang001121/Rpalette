@@ -29,11 +29,12 @@ source("examples/demo.R")
 To help you get started, I've included a colors folder with some of my own color palettes! 🎨
 - These are JSON files that you can directly use with Rpalette.
 - Steps to use:
+  
   1. Compile the JSON files into RDS format:
     ```R
     compile_palettes("colors")
     ```
-    This will process all JSON files in the colors folder and save them as RDS files in the same directory.
+    
   2. Load and preview a palette (e.g., vividset)
     ```R
     colors_vividset <- get_palette("vividset", type = "qualitative")
