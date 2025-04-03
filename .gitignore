@@ -4,5 +4,5 @@
 *.rds
 output/
 .Rproj.user
-.Rproj
+*.Rproj
 
