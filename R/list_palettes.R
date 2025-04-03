@@ -1,0 +1,162 @@
+# R/list_palettes.R
+#-------------------------------------------------------------------------------
+
+# Color Palette Listing Tool: Read and list all color palettes from an RDS file
+#-------------------------------------------------------------------------------
+#
+# Background:
+#   - This tool reads color palettes from a compiled RDS file and lists all saved palette information.
+#   - Supports three types of color palettes:
+#     - Sequential: Suitable for progressive data.
+#     - Diverging: Suitable for highlighting middle values.
+#     - Qualitative: Suitable for distinguishing discrete categories.
+#   - Provides a user-friendly data frame output for easy viewing and management.
+#
+# Parameters:
+#   - palette_rds: Path to the RDS file containing color palettes (default: "colors/color_palettes.rds")
+#   - type: Types of palettes to display, supports "sequential", "diverging", "qualitative"; default displays all types
+#   - sort: Logical, whether to sort the output by type, n_color, and name (default: TRUE)
+#   - verbose: Logical, whether to print messages to the console (default: TRUE)
+#
+# Return Value:
+#   - A data frame with the following columns:
+#     - name: Name of the color palette
+#     - type: Type of the color palette
+#     - n_color: Number of colors in the palette
+#     - colors: Color values (as a character vector list)
+#
+# Dependencies:
+#   - cli (for command-line interaction messages)
+
+list_palettes <- function(palette_rds = "colors/color_palettes.rds",
+                          type = c("sequential", "diverging", "qualitative"),
+                          sort = TRUE,
+                          verbose = TRUE) {
+
+  # Load required packages
+  if (!requireNamespace("cli", quietly = TRUE)) {
+    stop("Please install the cli package: install.packages('cli')", call. = FALSE)
+  }
+  library(cli)
+
+  # Validate type parameter
+  type <- match.arg(type, several.ok = TRUE)
+
+  # Display the types being listed
+  cli_h1("Listing color palettes of type: {paste(type, collapse = ', ')}")
+
+  # Check if RDS file exists
+  if (!file.exists(palette_rds)) {
+    cli_alert_warning("RDS file does not exist: {.path {palette_rds}}")
+    return(data.frame(
+      name = character(),
+      type = character(),
+      n_color = integer(),
+      colors = I(list()),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  # Read RDS file
+  palettes <- tryCatch({
+    readRDS(palette_rds)
+  }, error = function(e) {
+    cli_alert_danger("Failed to read RDS file: {e$message}")
+    stop(e)
+  })
+
+  # Get available types in RDS file
+  available_types <- names(palettes)
+
+  # Check if requested types exist in RDS file
+  matched_types <- intersect(type, available_types)
+  if (length(matched_types) == 0) {
+    cli_alert_warning("No palettes found for type: {paste(type, collapse = ', ')}. Available types: {paste(available_types, collapse = ', ')}")
+    return(data.frame(
+      name = character(),
+      type = character(),
+      n_color = integer(),
+      colors = I(list()),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  # Flatten palettes into a data frame, only for matched types
+  palette_list <- list()
+  for (type_val in matched_types) {
+    type_palettes <- palettes[[type_val]]
+    if (length(type_palettes) == 0) next
+
+    for (name in names(type_palettes)) {
+      colors <- type_palettes[[name]]
+      palette_list <- append(palette_list, list(data.frame(
+        name = name,
+        type = type_val,
+        n_color = length(colors),
+        colors = I(list(colors)),
+        stringsAsFactors = FALSE
+      )))
+    }
+  }
+
+  # Combine into a data frame
+  if (length(palette_list) == 0) {
+    cli_alert_info("No palettes found for type: {paste(type, collapse = ', ')}. Available types: {paste(available_types, collapse = ', ')}")
+    return(data.frame(
+      name = character(),
+      type = character(),
+      n_color = integer(),
+      colors = I(list()),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  palette_df <- do.call(rbind, palette_list)
+
+  # Sort the data frame if sort = TRUE
+  if (sort) {
+    palette_df <- palette_df[order(palette_df$type, palette_df$n_color, palette_df$name), ]
+  }
+
+  # Display prompt messages if verbose = TRUE
+  cli_alert_success("Found {nrow(palette_df)} color palettes:")
+
+  if (verbose) {
+    # Display total count and count by type
+    type_counts <- table(palette_df$type)
+    cli_alert_info("Total palettes: {nrow(palette_df)}")
+    for (type_val in names(type_counts)) {
+      cli_alert_info("Type {type_val}: {type_counts[type_val]} palettes")
+    }
+
+    for (i in 1:nrow(palette_df)) {
+      cli_alert_info("name: {palette_df$name[i]} | type: {palette_df$type[i]} | n_color: {palette_df$n_color[i]}")
+    }
+  }
+
+  return(palette_df)
+}
+
+#-------------------------------------------------------------------------------
+# Example Usage: List all color palettes
+#-------------------------------------------------------------------------------
+
+# Prerequisite: Assume colors/color_palettes.rds has been generated by compile_palettes()
+# Contains the following palettes:
+# - colors/sequential/blues.json
+# - colors/diverging/piyg.json
+# - colors/qualitative/vividset.json
+
+# # Example 1: List all types of color palettes (default)
+# palette_list <- list_palettes()
+# print(palette_list)
+#
+# # Example 2: List only qualitative type color palettes
+# palette_list <- list_palettes(type = "qualitative")
+# print(palette_list)
+#
+# # Example 3: List sequential and diverging type color palettes
+# palette_list <- list_palettes(type = c("sequential", "diverging"))
+# print(palette_list)
+
+#-------------------------------------------------------------------------------

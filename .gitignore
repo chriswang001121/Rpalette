@@ -3,3 +3,6 @@
 *.log
 *.rds
 output/
+.Rproj.user
+.Rproj
+
