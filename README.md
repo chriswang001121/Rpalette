@@ -1,3 +1,4 @@
+
 # Rpalette
 
 A simple R toolkit for managing and previewing color palettes in data visualization.
@@ -40,7 +41,7 @@ To help you get started, I've included a colors folder with some of my own color
     colors_vividset <- get_palette("vividset", type = "qualitative")
 
     preview_palette("vividset", type = "qualitative", plot_type = "bar")
-    ``` 
+I am editing the README file. Adding some more details about the project description.    ``` 
 - Feel free to explore, modify, or create your own palettes based on these examples!
 ## Example
 Here’s a preview of the "Blues" palette included in the colors folder:
