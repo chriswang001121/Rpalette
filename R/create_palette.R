@@ -1,6 +1,5 @@
 # R/create_palette.R
 #-------------------------------------------------------------------------------
-
 # Color Palette Creation Tool: Save custom color palettes as JSON using jsonlite
 #-------------------------------------------------------------------------------
 #
@@ -22,20 +21,20 @@
 #   - type: Type of palette, either "sequential", "diverging", or "qualitative" (default: "sequential")
 #   - colors: Vector of hexadecimal color values (supports transparency, e.g., "#E64B35B2")
 #   - color_dir: Root directory where the color palette is saved (default: "colors")
-#   - log_file: Path to save the log file (default: "colors/palette_creation.log")
+#   - log: Logical, whether to write a creation log (default: TRUE)
 #
-# Return Value:
-#   - None (implicitly returns the JSON file path); the result is saved as a JSON file and logged.
+# Returns:
+#   - (invisible) A list with `path` and `info`, or early exit if file exists
 #
 # Dependencies:
 #   - jsonlite (for reading and writing JSON files)
 #   - cli (for command-line interaction messages)
 
 create_palette <- function(name,
-                                type = c("sequential", "diverging", "qualitative"),
-                                colors,
-                                color_dir = "colors",
-                                log_file = file.path(color_dir, "palette_creation.log")) {
+                           type = c("sequential", "diverging", "qualitative"),
+                           colors,
+                           color_dir = "colors",
+                           log = TRUE) {
 
   # Load required packages
   if (!requireNamespace("jsonlite", quietly = TRUE)) {
@@ -44,8 +43,6 @@ create_palette <- function(name,
   if (!requireNamespace("cli", quietly = TRUE)) {
     stop("Please install the cli package: install.packages('cli')", call. = FALSE)
   }
-  library(jsonlite)
-  library(cli)
 
   type <- match.arg(type)
 
@@ -63,7 +60,7 @@ create_palette <- function(name,
   palette_dir <- file.path(color_dir, type)
   if (!dir.exists(palette_dir)) {
     dir.create(palette_dir, recursive = TRUE)
-    cli_alert_info("Directory automatically created: {.path {palette_dir}}")
+    cli::cli_alert_info("Directory automatically created: {.path {palette_dir}}")
   }
 
   # Construct the color palette list
@@ -78,33 +75,38 @@ create_palette <- function(name,
 
   # Check if the file already exists
   if (file.exists(json_file)) {
-    cli_alert_warning("File already exists: {.path {json_file}}, it will be overwritten")
-    return(invisible(NULL))
+    cli::cli_alert_warning("File already exists: {.path {json_file}}.")
+    return(invisible(list(path = json_file, info = palette_info)))
   }
 
   # Save as JSON
   tryCatch({
-    write_json(palette_info, path = json_file, pretty = TRUE, auto_unbox = TRUE)
-    cli_alert_success("Successfully created color palette JSON file: {.path {json_file}}")
+    jsonlite::write_json(palette_info, path = json_file, pretty = TRUE, auto_unbox = TRUE)
+    cli::cli_alert_success("Saved palette JSON file: {.path {json_file}}")
+    cat("✔ Palette created:", json_file, "\n")
   }, error = function(e) {
-    cli_alert_danger("Failed to save JSON file: {e$message}")
+    cli::cli_alert_danger("Failed to write JSON: {e$message}")
     stop(e)
   })
 
   # Log the creation process
-  log_entry <- paste(Sys.time(),
-                     "| Type:", type,
-                     "| Name:", name,
-                     "| Number of colors:", length(colors),
-                     "| Path:", json_file,
-                     "\n")
+  if (log) {
+    log_path <- "logs/create_palette.log"
+    dir.create(dirname(log_path), showWarnings = FALSE, recursive = TRUE)
 
-  tryCatch({
-    cat(log_entry, file = log_file, append = TRUE)
-    cli_alert_info("Log entry appended to file: {.path {log_file}}")
-  }, error = function(e) {
-    cli_alert_danger("Failed to record log: {e$message}")
-  })
+    log_entry <- paste(Sys.time(),
+                       "|", name,
+                       "|", type,
+                       "|", length(colors), "colors",
+                       "|", json_file,
+                       "\n")
+
+    tryCatch({
+      cat(log_entry, file = log_path, append = TRUE)
+    }, error = function(e) {
+      cli::cli_alert_danger("Log failed: {e$message}")
+    })
+  }
 
   # Return file path (implicitly)
   invisible(list(path = json_file, info = palette_info))
@@ -113,29 +115,29 @@ create_palette <- function(name,
 #-------------------------------------------------------------------------------
 # Example Usage: Create and save color palettes as JSON files
 #-------------------------------------------------------------------------------
-#
-# # Example 1: Create a Sequential-type color palette "blues"
+
+# Example 1: Create a Sequential palette named "blues"
 # create_palette(
 #   name = "blues",
 #   type = "sequential",
 #   colors = c("#deebf7", "#9ecae1", "#3182bd")
 # )
-# cat("Sequential color palette created: colors/sequential/blues.json\n")
-#
-# # Example 2: Create a Diverging-type color palette "piyg" (with transparency)
+# Expected output: logs/create_palette.log + colors/sequential/blues.json
+
+# Example 2: Create a Diverging palette named "piyg" (with transparency)
 # create_palette(
 #   name = "piyg",
 #   type = "diverging",
 #   colors = c("#E64B35B2", "#00A087B2", "#3C5488B2")
 # )
-# cat("Diverging color palette created: colors/diverging/piyg.json\n")
-#
-# # Example 3: Create a Qualitative-type color palette "vividset"
+# Expected output: logs/create_palette.log + colors/diverging/piyg.json
+
+# Example 3: Create a Qualitative palette named "vividset"
 # create_palette(
 #   name = "vividset",
 #   type = "qualitative",
 #   colors = c("#E64B35", "#4DBBD5", "#00A087", "#3C5488", "#F39B7F")
 # )
-# cat("Qualitative color palette created: colors/qualitative/vividset.json\n")
+# Expected output: logs/create_palette.log + colors/qualitative/vividset.json
 
 #-------------------------------------------------------------------------------

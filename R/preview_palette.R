@@ -34,18 +34,17 @@ preview_palette <- function(name,
                             n = NULL,
                             plot_type = c("bar", "pie", "point", "rect", "circle"),
                             title = name,
-                            palette_rds = "colors/color_palettes.rds") {
+                            palette_rds = "data/color_palettes.rds") {
 
   # Load required package
   if (!requireNamespace("cli", quietly = TRUE)) {
     stop("Please install the cli package: install.packages('cli')", call. = FALSE)
   }
-  library(cli)
 
   # Load get_palette if not available
   if (!exists("get_palette", mode = "function")) {
     source("R/get_palette.R")
-    cli_alert_info("函数 get_palette() 自动加载完成")
+    cli::cli_alert_info("函数 get_palette() 自动加载完成")
   }
 
   # Validate plot_type
@@ -55,7 +54,7 @@ preview_palette <- function(name,
   colors <- get_palette(name = name, type = type, n = n, palette_rds = palette_rds)
   num_colors <- length(colors)
 
-  cli_alert_success("Successfully extracted '{name}', number of colors: {.val {num_colors}}")
+  cli::cli_alert_success("Successfully extracted '{name}', number of colors: {.val {num_colors}}")
 
   # Generate the plot based on plot_type
   switch(plot_type,
@@ -131,7 +130,7 @@ preview_palette <- function(name,
          stop("Unsupported plot type. Supported types: 'bar', 'pie', 'point', 'rect', 'circle'")
   )
 
-  cli_alert_info("Preview of '{name}' completed, plot type: {.val {plot_type}}, number of colors: {.val {num_colors}}")
+  cli::cli_alert_info("Preview of '{name}' completed, plot type: {.val {plot_type}}, number of colors: {.val {num_colors}}")
 
   invisible(NULL)
 
@@ -148,7 +147,7 @@ preview_palette <- function(name,
 # - qualitative/harmonysix (6 colors)
 
 # # Example 1: Preview vividset using a bar plot (all colors)
-# preview_palette("vividset", type = "qualitative", plot_type = "bar")
+preview_palette("vividset", type = "qualitative", plot_type = "bar")
 #
 # # Example 2: Preview softtrio using a pie chart
 # preview_palette("softtrio", type = "qualitative", plot_type = "pie")
@@ -158,7 +157,7 @@ preview_palette <- function(name,
 #
 # # Example 4: Preview vividset using a rectangle plot (first 5 colors)
 # preview_palette("vividset", type = "qualitative", n = 5, plot_type = "rect",
-#                 title = "VividSet Preview (5 Colors)")
+                # title = "VividSet Preview (5 Colors)")
 #
 # # Example 5: Preview softtrio using a circle plot
 # preview_palette("softtrio", type = "qualitative", plot_type = "circle")

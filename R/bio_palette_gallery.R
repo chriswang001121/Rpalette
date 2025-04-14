@@ -27,7 +27,7 @@
 #   - ggplot2
 #   - cli (for messaging)
 
-bio_palette_gallery <- function(palette_rds = "colors/color_palettes.rds",
+bio_palette_gallery <- function(palette_rds = "data/color_palettes.rds",
                                 type = c("sequential", "diverging", "qualitative"),
                                 max_palettes = 30,
                                 max_row = 12,

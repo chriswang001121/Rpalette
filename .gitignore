@@ -1,8 +1,27 @@
-*.Rhistory
-*.RData
-*.log
-*.rds
-output/
-.Rproj.user
+# R / RStudio local files
+.Rhistory
+.RData
+.Rproj.user/
 *.Rproj
 
+# Output directory and generated files
+output/
+
+# Logs
+*.log
+
+# Data files
+*.rds
+
+# Test outputs (if testthat is used later)
+.Rcheck/
+tests/testthat.R
+tests/testthat/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Docs or temporary web builds
+docs/
+*.html

@@ -28,7 +28,7 @@
 # Dependencies:
 #   - cli (for command-line interaction messages)
 
-list_palettes <- function(palette_rds = "colors/color_palettes.rds",
+list_palettes <- function(palette_rds = "data/color_palettes.rds",
                           type = c("sequential", "diverging", "qualitative"),
                           sort = TRUE,
                           verbose = TRUE) {
@@ -37,17 +37,16 @@ list_palettes <- function(palette_rds = "colors/color_palettes.rds",
   if (!requireNamespace("cli", quietly = TRUE)) {
     stop("Please install the cli package: install.packages('cli')", call. = FALSE)
   }
-  library(cli)
 
   # Validate type parameter
   type <- match.arg(type, several.ok = TRUE)
 
   # Display the types being listed
-  cli_h1("Listing color palettes of type: {paste(type, collapse = ', ')}")
+  cli::cli_h1("Listing color palettes of type: {paste(type, collapse = ', ')}")
 
   # Check if RDS file exists
   if (!file.exists(palette_rds)) {
-    cli_alert_warning("RDS file does not exist: {.path {palette_rds}}")
+    cli::cli_alert_warning("RDS file does not exist: {.path {palette_rds}}")
     return(data.frame(
       name = character(),
       type = character(),
@@ -61,7 +60,7 @@ list_palettes <- function(palette_rds = "colors/color_palettes.rds",
   palettes <- tryCatch({
     readRDS(palette_rds)
   }, error = function(e) {
-    cli_alert_danger("Failed to read RDS file: {e$message}")
+    cli::cli_alert_danger("Failed to read RDS file: {e$message}")
     stop(e)
   })
 
@@ -71,7 +70,7 @@ list_palettes <- function(palette_rds = "colors/color_palettes.rds",
   # Check if requested types exist in RDS file
   matched_types <- intersect(type, available_types)
   if (length(matched_types) == 0) {
-    cli_alert_warning("No palettes found for type: {paste(type, collapse = ', ')}. Available types: {paste(available_types, collapse = ', ')}")
+    cli::cli_alert_warning("No palettes found for type: {paste(type, collapse = ', ')}. Available types: {paste(available_types, collapse = ', ')}")
     return(data.frame(
       name = character(),
       type = character(),
@@ -101,7 +100,7 @@ list_palettes <- function(palette_rds = "colors/color_palettes.rds",
 
   # Combine into a data frame
   if (length(palette_list) == 0) {
-    cli_alert_info("No palettes found for type: {paste(type, collapse = ', ')}. Available types: {paste(available_types, collapse = ', ')}")
+    cli::cli_alert_info("No palettes found for type: {paste(type, collapse = ', ')}. Available types: {paste(available_types, collapse = ', ')}")
     return(data.frame(
       name = character(),
       type = character(),
@@ -119,18 +118,18 @@ list_palettes <- function(palette_rds = "colors/color_palettes.rds",
   }
 
   # Display prompt messages if verbose = TRUE
-  cli_alert_success("Found {nrow(palette_df)} color palettes:")
+  cli::cli_alert_success("Found {nrow(palette_df)} color palettes:")
 
   if (verbose) {
     # Display total count and count by type
     type_counts <- table(palette_df$type)
-    cli_alert_info("Total palettes: {nrow(palette_df)}")
+    cli::cli_alert_info("Total palettes: {nrow(palette_df)}")
     for (type_val in names(type_counts)) {
-      cli_alert_info("Type {type_val}: {type_counts[type_val]} palettes")
+      cli::cli_alert_info("Type {type_val}: {type_counts[type_val]} palettes")
     }
 
     for (i in 1:nrow(palette_df)) {
-      cli_alert_info("name: {palette_df$name[i]} | type: {palette_df$type[i]} | n_color: {palette_df$n_color[i]}")
+      cli::cli_alert_info("name: {palette_df$name[i]} | type: {palette_df$type[i]} | n_color: {palette_df$n_color[i]}")
     }
   }
 
@@ -152,8 +151,7 @@ list_palettes <- function(palette_rds = "colors/color_palettes.rds",
 # print(palette_list)
 #
 # # Example 2: List only qualitative type color palettes
-# palette_list <- list_palettes(type = "qualitative")
-# print(palette_list)
+# list_palettes(type = "qualitative")
 #
 # # Example 3: List sequential and diverging type color palettes
 # palette_list <- list_palettes(type = c("sequential", "diverging"))
