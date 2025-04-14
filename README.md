@@ -69,7 +69,7 @@ Feel free to:
 
 Here’s a bar preview of the qualitative palette **"vividset"**:
 
-![vividset](output/preview/vividset_bar.png)
+![vividset](examples/vividset_bar.png)
 
 ---
 
@@ -110,5 +110,3 @@ You're welcome to:
 ## 📄 License
 
 This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for details.
-
-```
