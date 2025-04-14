@@ -147,7 +147,7 @@ preview_palette <- function(name,
 # - qualitative/harmonysix (6 colors)
 
 # # Example 1: Preview vividset using a bar plot (all colors)
-preview_palette("vividset", type = "qualitative", plot_type = "bar")
+# preview_palette("vividset", type = "qualitative", plot_type = "bar")
 #
 # # Example 2: Preview softtrio using a pie chart
 # preview_palette("softtrio", type = "qualitative", plot_type = "pie")
